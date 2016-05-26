@@ -5,15 +5,6 @@
 #define ARQUIVO_IMPORTACAO "catalogo.txt"
 #define ARQUIVO_REGISTROS  "registros.txt"
 
-typedef struct Aluno{
-    int id;
-    char* autor;
-    char* titulo;
-    char* curso;
-    char* tipo;
-}Aluno;
-
-
 int selecionaOpcao(){
 
     int opcao;
@@ -29,69 +20,47 @@ int selecionaOpcao(){
 
 }
 
-void le(FILE* fHandle){
-
-	char buffer[512];
-	char* field;
-
-	fread(buffer, 1, 64, fHandle);
-
-	field = strtok(buffer,"|");
-	while(field!=NULL){
-		printf("%s \n", field);
-		field = strtok(NULL, "|");
-	}
+int readfield (FILE* fHandle, char* string){
+	int i = 0;
+	char ch;
+	ch = fgetc(fHandle);
+	while(ch != EOF && ch != '\n' ) {
+		if ( ch == ';'){
+			string[i] = '|';
+		}else{
+        	string[i] = ch;
+    	}
+    	i = i + 1;
+        ch = fgetc(fHandle);
+    }
+    string[i] = '|';
+    i = i+1;
+	string[i] = '\0';
+	return i;
 }
 
 void importacao(){
-
+    unsigned short tamanhoString;
     FILE* file;
-	int i = 0;
-	int iCampo = 0;
-	int iString = 0;
+    FILE* fileEscrita;
 	char ch;
-	char* string;
-    char alunos[100][5][1000];
+	char* buffer;
     file = fopen( ARQUIVO_IMPORTACAO, "r+" );
     if ( !file ){
         printf("\n Não foi possivel abrir arquivo %s. Verifique!", ARQUIVO_IMPORTACAO );
         return;
     }
-
-	ch = fgetc(file);
-    alunos[i][iCampo];
-	while(ch != EOF ) {
-        //novo registro
-	    if( ch == '\n'){
-            i++;
-            iCampo = 0;
-            iString = 0;
-            ch = fgetc(file);
-            continue;
-	    }
-        //le registro
-	    while( ch != '\n' ){
-            if ( ch == ';'){
-                iCampo++;
-                iString = 0;
-                ch = fgetc(file);
-                continue;
-            }
-            alunos[i][iCampo][iString] = ch;
-            iString++;
-            ch = fgetc(file);
-	    }
-
+    fileEscrita = fopen( ARQUIVO_REGISTROS, "w+" );
+    if ( !fileEscrita ){
+        printf("\n Não foi possivel abrir arquivo %s de escrita. Verifique!", ARQUIVO_REGISTROS );
+        return;
     }
-
-    for( int n = 0; n < 100; n++){
-        printf( "\n");
-        for( int j = 0; j < 5; j++){
-            printf("\n-->%s", alunos[n][j] );
-        }
-        printf( "\n");
-    }
-    printf( " \n\n %d ", i );
+	while (readfield(file, buffer) > 1 ){
+        tamanhoString = strlen(buffer);
+        printf("\n %d ", tamanhoString );
+        fwrite(&tamanhoString, sizeof(tamanhoString), 1, fileEscrita);
+        fwrite(buffer, tamanhoString, 1, fileEscrita);
+	}
 }
 
 void main(){
