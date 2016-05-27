@@ -39,13 +39,52 @@ int readfield (FILE* fHandle, char* string){
 	return i;
 }
 
+void removeId( char* id){
+	FILE* file;
+	char idArquivo[3];
+	short deslocamento;
+	int bytesLidos;
+	file = fopen(ARQUIVO_REGISTROS, "r+");
+	if( !file ){
+		printf( "Não foi possivel abrir o arquivo %s para remoção", ARQUIVO_REGISTROS );
+		return;
+	}
+	do{
+		fread(&deslocamento, sizeof(short), 1, file);
+		bytesLidos = fread(&idArquivo, sizeof(char) * 2, 1, file);
+		idArquivo[2] = '\0';
+		printf("\n idArquivo : %c", idArquivo[0] );
+		printf("\n idArquivo : %c", idArquivo[1] );
+		printf("\n sizeof %s",  idArquivo );
+		printf("\n deslocamento %d", deslocamento);
+		if ( strcmp(id, idArquivo ) ){
+			fseek( file, deslocamento - sizeof(char) - sizeof(char), SEEK_CUR); 
+		}
+	}while( strcmp(id, idArquivo) && bytesLidos != 0 );
+		fseek(file, ftell(file), SEEK_SET);
+		printf("\n------------%d---------", fputs("|-1", file) );
+		fflush(file);
+		fclose(file);
+
+}
+
+void remocao(){
+	char id[2];
+	
+	printf("\n Digite id a ser removido:");
+	gets(id);
+	fflush(stdin);
+	
+	removeId( id );
+		
+}
 void importacao(){
     unsigned short tamanhoString;
     FILE* file;
     FILE* fileEscrita;
 	char ch;
 	char* buffer;
-    file = fopen( ARQUIVO_IMPORTACAO, "r+" );
+    file = fopen( ARQUIVO_IMPORTACAO, "r" );
     if ( !file ){
         printf("\n Não foi possivel abrir arquivo %s. Verifique!", ARQUIVO_IMPORTACAO );
         return;
@@ -57,17 +96,20 @@ void importacao(){
     }
 	while (readfield(file, buffer) > 1 ){
         tamanhoString = strlen(buffer);
-        printf("\n %d ", tamanhoString );
         fwrite(&tamanhoString, sizeof(tamanhoString), 1, fileEscrita);
         fwrite(buffer, tamanhoString, 1, fileEscrita);
 	}
+	
+	fclose( file);
+	fclose( fileEscrita);
 }
 
 void main(){
 
     int opcao;
-
-    opcao = selecionaOpcao();
+    
+    opcao = selecionaOpcao();    
+    //remocao();
     while( opcao != 0){
         switch(opcao){
             case 1 : {
@@ -80,7 +122,7 @@ void main(){
             }
 
             case 3 : {
-                printf( "\n Remoção");
+                remocao();
                 break;
             }
         }
